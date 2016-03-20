@@ -50,7 +50,17 @@ area (Triangle base height) = 0.5 * base * height
 area (Rectangle length height) = length * height
 area (Circle radius) = pi * radius * radius
 
+areaTriangle : Shape -> Maybe Double
+areaTriangle t@(Triangle x y) = Just $ area t
+areaTriangle _ = Nothing
+
 data Picture = Primitive Shape
              | Combine Picture Picture
              | Rotate Double Picture
              | Translate Double Double Picture
+
+biggestTriangle : Picture -> Maybe Double
+biggestTriangle (Primitive x) = areaTriangle x
+biggestTriangle (Combine x y) = maxMaybe (biggestTriangle x) (biggestTriangle y)
+biggestTriangle (Rotate x y) = biggestTriangle y
+biggestTriangle (Translate x y z) = biggestTriangle z
