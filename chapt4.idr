@@ -37,3 +37,20 @@ maxMaybe Nothing Nothing = Nothing
 maxMaybe Nothing (Just x) = Just x
 maxMaybe (Just x) Nothing = Just x
 maxMaybe (Just x) (Just y) = Just $ max x y
+
+data Shape = Triangle Double Double
+           | Rectangle Double Double
+           | Circle Double
+
+pi : Double
+pi = 3.1415
+
+area : Shape -> Double
+area (Triangle base height) = 0.5 * base * height
+area (Rectangle length height) = length * height
+area (Circle radius) = pi * radius * radius
+
+data Picture = Primitive Shape
+             | Combine Picture Picture
+             | Rotate Double Picture
+             | Translate Double Double Picture
