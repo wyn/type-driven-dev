@@ -50,3 +50,8 @@ multiMatrix xs ys = let ys_trans = transpose_mat ys in
 -- [d,e,f]   [D,E,F]   [dA+eB+fC, dD+eE+fF, dG+eH+fI]
 --           [G,H,I]          
           
+create_empties1 : Vect n (Vect 0 a)
+create_empties1 {n = Z} = []
+create_empties1 {n = (S k)} = [] :: create_empties 
+
+
