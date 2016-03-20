@@ -20,3 +20,15 @@ listToTree (x :: xs) = let xsTree = listToTree xs in insert x xsTree
 treeToList : Tree a -> List a
 treeToList Empty = []
 treeToList (Node left x right) = (treeToList left ++ [x]) ++ treeToList right
+
+data Expr = I Int
+          | EAdd Expr Expr
+          | ESub Expr Expr
+          | EMult Expr Expr
+          
+eval : Expr -> Int
+eval (I x) = x
+eval (EAdd x y) = (eval x) + (eval y)
+eval (ESub x y) = (eval x) - (eval y)
+eval (EMult x y) = (eval x) * (eval y)
+
