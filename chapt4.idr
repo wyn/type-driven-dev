@@ -32,3 +32,8 @@ eval (EAdd x y) = (eval x) + (eval y)
 eval (ESub x y) = (eval x) - (eval y)
 eval (EMult x y) = (eval x) * (eval y)
 
+maxMaybe : Ord a => Maybe a -> Maybe a -> Maybe a
+maxMaybe Nothing Nothing = Nothing
+maxMaybe Nothing (Just x) = Just x
+maxMaybe (Just x) Nothing = Just x
+maxMaybe (Just x) (Just y) = Just $ max x y
