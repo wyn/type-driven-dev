@@ -64,3 +64,19 @@ biggestTriangle (Primitive x) = areaTriangle x
 biggestTriangle (Combine x y) = maxMaybe (biggestTriangle x) (biggestTriangle y)
 biggestTriangle (Rotate x y) = biggestTriangle y
 biggestTriangle (Translate x y z) = biggestTriangle z
+
+
+rectangle : Picture
+rectangle = Primitive (Rectangle 20 10)
+
+circle : Picture
+circle = Primitive (Circle 5)
+
+triangle : Double -> Picture
+triangle x = Primitive (Triangle x x)
+
+test_picture : Picture
+test_picture = Combine (Translate 5 5 rectangle)
+               (Combine (Translate 35 5 circle)
+                              (Combine (Translate 15 25 (triangle 12))
+                                       (Translate 35 45 (triangle 1))))
