@@ -17,4 +17,6 @@ listToTree : Ord a => List a -> Tree a
 listToTree [] = Empty
 listToTree (x :: xs) = let xsTree = listToTree xs in insert x xsTree
 
-
+treeToList : Tree a -> List a
+treeToList Empty = []
+treeToList (Node left x right) = (treeToList left ++ [x]) ++ treeToList right
