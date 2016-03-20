@@ -12,3 +12,9 @@ insert x orig@(Node left val right) = case compare x val of
                                       LT => Node (insert x left) val right
                                       EQ => orig
                                       GT => Node left val (insert x right)
+
+listToTree : Ord a => List a -> Tree a
+listToTree [] = Empty
+listToTree (x :: xs) = let xsTree = listToTree xs in insert x xsTree
+
+
