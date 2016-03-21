@@ -13,4 +13,3 @@ append (x :: xs) ys = x :: append xs ys
 zip : Vect n a -> Vect n b -> Vect n (a, b)
 zip [] [] = []
 zip (x :: xs) (y :: ys) = (x, y) :: zip xs ys
-
