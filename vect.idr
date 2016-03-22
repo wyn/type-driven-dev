@@ -16,6 +16,19 @@ zip : Vect n a -> Vect n b -> Vect n (a, b)
 zip [] [] = []
 zip (x :: xs) (y :: ys) = (x, y) :: zip xs ys
 
-take : (i : Fin n) -> Vect n a -> Vect (n - i) a
--- take FZ xs = xs 
--- take (FS j) xs = ?take_rhs_2
+-- take : (i : Nat) -> Vect n a -> Vect (n - i) a
+-- take Z xs = xs
+-- take (S k) xs = ?take_rhs_2
+
+index : Fin n -> Vect n a -> a
+index FZ (x :: xs) = x
+index (FS i) (x :: xs) = index i xs
+
+
+tryIndex : Integer -> Vect n a -> Maybe a
+tryIndex {n} i xs = case integerToFin i n of
+                         Nothing => Nothing
+                         Just idx => Just (index idx xs)
+
+sumEntries : Num a => (pos : Integer) -> Vect n a -> Vect n a -> Maybe a
+sumEntries pos xs ys = [| (tryIndex pos xs) + (tryIndex pos ys)  |]
