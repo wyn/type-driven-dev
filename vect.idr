@@ -1,5 +1,7 @@
 module Vect
 
+import Data.Fin
+
 data Vect : Nat -> Type -> Type where
   Nil  : Vect Z a
   (::) : (x : a) -> (xs : Vect k a) -> Vect (S k) a
@@ -13,3 +15,7 @@ append (x :: xs) ys = x :: append xs ys
 zip : Vect n a -> Vect n b -> Vect n (a, b)
 zip [] [] = []
 zip (x :: xs) (y :: ys) = (x, y) :: zip xs ys
+
+take : (i : Fin n) -> Vect n a -> Vect (n - i) a
+-- take FZ xs = xs 
+-- take (FS j) xs = ?take_rhs_2
