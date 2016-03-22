@@ -16,9 +16,13 @@ zip : Vect n a -> Vect n b -> Vect n (a, b)
 zip [] [] = []
 zip (x :: xs) (y :: ys) = (x, y) :: zip xs ys
 
--- take : (i : Nat) -> Vect n a -> Vect (n - i) a
--- take Z xs = xs
--- take (S k) xs = ?take_rhs_2
+remove' : (i : Fin n) -> Vect n a -> Vect (n - finToNat i) a
+remove' FZ xs = xs
+remove' (FS j) (x :: xs) = remove' j xs
+
+take' : (i : Fin n) -> Vect n a -> Vect (finToNat i) a
+take' FZ xs = []
+take' (FS j) (x :: xs) = x :: take' j xs
 
 index : Fin n -> Vect n a -> a
 index FZ (x :: xs) = x
