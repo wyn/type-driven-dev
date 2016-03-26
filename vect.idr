@@ -16,9 +16,9 @@ zip : Vect n a -> Vect n b -> Vect n (a, b)
 zip [] [] = []
 zip (x :: xs) (y :: ys) = (x, y) :: zip xs ys
 
-remove' : (i : Fin n) -> Vect n a -> Vect (n - finToNat i) a
-remove' FZ xs = xs
-remove' (FS j) (x :: xs) = remove' j xs
+-- remove' : (i : Fin (n+1)) -> Vect n a -> Vect (n - (cast i)) a
+-- remove' FZ xs = xs
+-- remove' (FS j) (x :: xs) = remove' j xs
 
 take' : (i : Fin n) -> Vect n a -> Vect (finToNat i) a
 take' FZ xs = []
