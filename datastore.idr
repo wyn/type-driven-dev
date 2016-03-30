@@ -10,15 +10,6 @@ data DataStore : Type where
            (items : Vect size String) ->
            DataStore
 
-search : DataStore -> String -> List String
-search (MkData Z []) substring = []
-search (MkData (S k) (item :: items)) substring = case Strings.isInfixOf substring item of
-                                                       True => item :: search (MkData k items) substring
-                                                       False => search (MkData k items) substring
-                                                    
-
-
-                      
 size : DataStore -> Nat           
 size (MkData size items) = size
 
@@ -34,6 +25,7 @@ addToStore (MkData size items) newitem = MkData _ (addToData items)
     
 data Command = Add String
              | Get Integer
+             | Search String
              | Quit
              | Help
              
@@ -42,6 +34,7 @@ parseInput "add" str = Just (Add str)
 parseInput "get" val = case all isDigit (unpack val) of
                             False => Nothing
                             True => Just (Get (cast val))
+parseInput "search" substring = Just (Search substring)
 parseInput "quit" "" = Just Quit
 parseInput "help" "" = Just Help
 parseInput _ _ = Nothing                            
@@ -57,14 +50,23 @@ getEntry pos store =
       Nothing => Just ("Out of range\n", store)
       Just id => Just (index id store_items ++ "\n", store)
 
+partial
+search : DataStore -> String -> List String
+search (MkData Z []) substring = []
+search (MkData (S k) (item :: items)) substring = case Strings.isInfixOf substring item of
+                                                       True => item :: search (MkData k items) substring
+                                                       False => search (MkData k items) substring
+                      
+partial 
 processInput : DataStore -> String -> Maybe (String, DataStore)
 processInput store inp = 
   case parse inp of
     Nothing => Just ("Invalid command\n", store)
     Just (Add item) => Just ("ID " ++ show (size store) ++ "\n", addToStore store item)
     Just (Get pos) => getEntry pos store
+    Just (Search substring) => Just (foldr (++) "" $ intersperse "\n" $ map show (search store substring), store)
     Just Quit => Nothing
-    Just Help => Just ("Use [add] [get] commands to add/retrieve items to the store.\n" ++
+    Just Help => Just ("Use [add] [get] [search] commands to add/retrieve/search items in the store.\n" ++
                        "[quit] will quit the session.\n", store)
 
 partial
