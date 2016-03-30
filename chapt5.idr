@@ -70,11 +70,11 @@ readVectFile : (filename : String) -> IO (n ** Vect n String)
 readVectFile filename = do
   Right h <- openFile filename Read
         | Left err => do 
-               putStrLn $ show err 
+               -- putStrLn $ show err 
                pure (_ ** [])
   Right xs <- readVectFileHandle h
         | Left err => do 
-               putStrLn $ show err 
+               -- putStrLn $ show err 
                pure (_ ** [])
   pure xs
 
