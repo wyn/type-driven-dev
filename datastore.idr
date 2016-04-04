@@ -38,6 +38,7 @@ addToStore (MkData schema size items) newitem = MkData schema _ (addToData items
     addToData (item :: items') = item :: addToData items'
     
 data Command : Schema -> Type where
+  SetSchema : (newschema : Schema) -> Command schema
   Add : SchemaType schema -> Command schema
   Get : Integer -> Command schema
   Quit : Command schema
@@ -70,7 +71,18 @@ parseBySchema schema input = case parsePrefix schema input of
                                   Just _ => Nothing
                                   Nothing => Nothing
 
-                          
+parseSchema : List String -> Maybe Schema
+parseSchema ("String" :: xs) = case xs of
+                                      [] => Just SString
+                                      _ => case parseSchema xs of
+                                                Nothing => Nothing
+                                                Just xs' => Just (SString .+. xs')
+parseSchema ("Int" :: xs) = case xs of
+                                 [] => Just SInt
+                                 _ => case parseSchema xs of
+                                           Nothing => Nothing
+                                           Just xs' => Just (SInt .+. xs')
+
 parseInput : (schema : Schema) -> (cmd : String) -> (args : String) -> Maybe (Command schema)
 parseInput schema "add" str = case parseBySchema schema str of
                                    Nothing => Nothing
@@ -78,6 +90,10 @@ parseInput schema "add" str = case parseBySchema schema str of
 parseInput schema "get" val = case all isDigit (unpack val) of
                             False => Nothing
                             True => Just (Get (cast val))
+parseInput schema "schema" rest = case parseSchema (words rest) of
+                                       Nothing => Nothing
+                                       Just schema_ok => Just (SetSchema schema_ok)
+
 -- parseInput "search" substring = Just (Search substring)
 parseInput schema "quit" "" = Just Quit
 parseInput schema "help" "" = Just Help
@@ -104,13 +120,21 @@ getEntry pos store =
 -- search (MkData (S k) (item :: items)) substring = case Strings.isInfixOf substring item of
 --                                                        True => item :: search (MkData k items) substring
 --                                                        False => search (MkData k items) substring
-                      
+
+setSchema : (store : DataStore) -> Schema -> Maybe DataStore
+setSchema store schema = case size store of
+                              Z => Just (MkData schema _ [])
+                              S k => Nothing
+
 processInput : DataStore -> String -> Maybe (String, DataStore)
 processInput store inp = 
   case parse (schema store) inp of
     Nothing => Just ("Invalid command\n", store)
     Just (Add item) => Just ("ID " ++ show (size store) ++ "\n", addToStore store item)
     Just (Get pos) => getEntry pos store
+    Just (SetSchema schema') => case setSchema store schema' of
+                                     Nothing => Just ("Cannot reset schema\n", store)
+                                     Just store' => Just ("OK\n", store')
 --    Just (Search substring) => Just (foldr (++) "" $ intersperse "\n" $ map show (search store substring), store)
     Just Quit => Nothing
     Just Help => Just ("Use [add] [get] [search] commands to add/retrieve/search items in the store.\n" ++
