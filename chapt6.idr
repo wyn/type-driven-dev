@@ -41,5 +41,11 @@ adder : Num numType => (numargs : Nat) -> (acc : numType) -> AdderType numargs n
 adder Z acc = acc
 adder (S k) acc = \next => adder k (acc + next) 
 
+TupleVect : Nat -> Type -> Type
+TupleVect Z ty = ()
+TupleVect (S k) ty = (ty, TupleVect k ty)
+
+test : TupleVect 4 Nat
+test = (1,2,3,4,())
 
 
