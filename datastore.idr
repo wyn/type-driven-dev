@@ -6,11 +6,13 @@ infixr 5 .+.
 
 data Schema = SString
             | SInt
+            | SChar
             | (.+.) Schema Schema
 
 SchemaType : Schema -> Type
 SchemaType SString = String
 SchemaType SInt = Int
+SchemaType SChar= Char
 SchemaType (x .+. y) = (SchemaType x, SchemaType y)
 
 
@@ -19,15 +21,6 @@ record DataStore where
   schema : Schema
   size : Nat
   items : Vect size (SchemaType schema)
-
--- schema : DataStore -> Schema
--- schema (MkData schema' size items) = schema'
-
--- size : DataStore -> Nat           
--- size (MkData schema size items) = size
-
--- items : (store : DataStore) -> Vect (size store) (SchemaType (schema store))
--- items (MkData schema size items) = items
 
 
 addToStore : (store : DataStore) -> SchemaType (schema store)  -> DataStore 
@@ -43,8 +36,7 @@ data Command : Schema -> Type where
   Get : Integer -> Command schema
   Quit : Command schema
   Help : Command schema
-
---              | Search String
+--  Search : String -> Command schema
                           
 parsePrefix : (schema : Schema) -> String -> Maybe (SchemaType schema, String)                          
 parsePrefix SString item = getQuoted (unpack item)
@@ -58,6 +50,11 @@ parsePrefix SString item = getQuoted (unpack item)
 parsePrefix SInt item = case span isDigit item of
                              ("", rest) => Nothing
                              (num, rest) => Just (cast num, ltrim rest)
+parsePrefix SChar item = getQuoted (unpack item)
+  where
+    getQuoted : List Char -> Maybe (Char, String)
+    getQuoted ('"' :: c :: '"' :: rest) = Just (c, ltrim (pack rest))
+    getQuoted _ = Nothing
 parsePrefix (schema_l .+. schema_r) item = case parsePrefix schema_l item of
                                                 Nothing => Nothing
                                                 Just (l_val, item') => 
@@ -77,6 +74,11 @@ parseSchema ("String" :: xs) = case xs of
                                       _ => case parseSchema xs of
                                                 Nothing => Nothing
                                                 Just xs' => Just (SString .+. xs')
+parseSchema ("Char" :: xs) = case xs of
+                                  [] => Just SChar
+                                  _ => case parseSchema xs of
+                                            Nothing => Nothing
+                                            Just xs' => Just (SChar .+. xs')
 parseSchema ("Int" :: xs) = case xs of
                                  [] => Just SInt
                                  _ => case parseSchema xs of
@@ -94,7 +96,7 @@ parseInput schema "schema" rest = case parseSchema (words rest) of
                                        Nothing => Nothing
                                        Just schema_ok => Just (SetSchema schema_ok)
 
--- parseInput "search" substring = Just (Search substring)
+-- parseInput schema "search" substring = Just (Search substring)
 parseInput schema "quit" "" = Just Quit
 parseInput schema "help" "" = Just Help
 parseInput _ _ _ = Nothing                            
@@ -106,6 +108,7 @@ parse schema input = case span (/= ' ') input of
 display : SchemaType schema -> String
 display {schema = SString} item = show item
 display {schema = SInt} item = show item
+display {schema = SChar} item = show item
 display {schema = (x .+. y)} (a, b) = display a ++ ", " ++ display b
 
 getEntry : (pos : Integer) -> (store : DataStore) -> Maybe (String, DataStore)
@@ -116,6 +119,9 @@ getEntry pos store =
       Just id => Just (display (index id store_items) ++ "\n", store)
 
 -- search : DataStore -> String -> List String
+-- search (MkData schema Z []) substring = []
+-- search (MkData schema (S k) (item::items)) substring = ?search_rhs_3
+
 -- search (MkData Z []) substring = []
 -- search (MkData (S k) (item :: items)) substring = case Strings.isInfixOf substring item of
 --                                                        True => item :: search (MkData k items) substring
@@ -125,6 +131,7 @@ setSchema : (store : DataStore) -> Schema -> Maybe DataStore
 setSchema store schema = case size store of
                               Z => Just (MkData schema _ [])
                               S k => Nothing
+                              
 
 processInput : DataStore -> String -> Maybe (String, DataStore)
 processInput store inp = 
@@ -137,7 +144,7 @@ processInput store inp =
                                      Just store' => Just ("OK\n", store')
 --    Just (Search substring) => Just (foldr (++) "" $ intersperse "\n" $ map show (search store substring), store)
     Just Quit => Nothing
-    Just Help => Just ("Use [add] [get] [search] commands to add/retrieve/search items in the store.\n" ++
+    Just Help => Just ("Use [add] [get] commands to add/retrieve items in the store.\n" ++
                        "[quit] will quit the session.\n", store)
 
 -- partial
