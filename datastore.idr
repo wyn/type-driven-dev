@@ -55,12 +55,10 @@ parsePrefix SChar item = getQuoted (unpack item)
     getQuoted : List Char -> Maybe (Char, String)
     getQuoted ('"' :: c :: '"' :: rest) = Just (c, ltrim (pack rest))
     getQuoted _ = Nothing
-parsePrefix (schema_l .+. schema_r) item = case parsePrefix schema_l item of
-                                                Nothing => Nothing
-                                                Just (l_val, item') => 
-                                                case parsePrefix schema_r item' of
-                                                     Nothing => Nothing
-                                                     Just (r_val, item'') => Just ((l_val, r_val), item'')
+parsePrefix (schema_l .+. schema_r) item = do
+  (l_val, item') <- parsePrefix schema_l item
+  (r_val, item'') <- parsePrefix schema_r item'
+  return  ((l_val, r_val), item'')
 
 parseBySchema : (schema : Schema) -> String -> Maybe (SchemaType schema)
 parseBySchema schema input = case parsePrefix schema input of 
