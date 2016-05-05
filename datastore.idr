@@ -69,30 +69,27 @@ parseBySchema schema input = case parsePrefix schema input of
 parseSchema : List String -> Maybe Schema
 parseSchema ("String" :: xs) = case xs of
                                       [] => Just SString
-                                      _ => case parseSchema xs of
-                                                Nothing => Nothing
-                                                Just xs' => Just (SString .+. xs')
+                                      _ => do xs' <- parseSchema xs
+                                              return (SString .+. xs')
 parseSchema ("Char" :: xs) = case xs of
                                   [] => Just SChar
-                                  _ => case parseSchema xs of
-                                            Nothing => Nothing
-                                            Just xs' => Just (SChar .+. xs')
+                                  _ => do xs' <- parseSchema xs
+                                          return (SChar .+. xs')
 parseSchema ("Int" :: xs) = case xs of
                                  [] => Just SInt
-                                 _ => case parseSchema xs of
-                                           Nothing => Nothing
-                                           Just xs' => Just (SInt .+. xs')
+                                 _ => do xs' <- parseSchema xs
+                                         return (SInt .+. xs')
 
 parseInput : (schema : Schema) -> (cmd : String) -> (args : String) -> Maybe (Command schema)
-parseInput schema "add" str = case parseBySchema schema str of
-                                   Nothing => Nothing
-                                   Just rest => Just (Add rest)
+parseInput schema "add" str = do
+  rest <- parseBySchema schema str
+  return (Add rest)
 parseInput schema "get" val = case all isDigit (unpack val) of
                             False => Nothing
                             True => Just (Get (cast val))
-parseInput schema "schema" rest = case parseSchema (words rest) of
-                                       Nothing => Nothing
-                                       Just schema_ok => Just (SetSchema schema_ok)
+parseInput schema "schema" rest = do
+  schema_ok <- parseSchema (words rest)
+  return (SetSchema schema_ok)
 
 -- parseInput schema "search" substring = Just (Search substring)
 parseInput schema "quit" "" = Just Quit
