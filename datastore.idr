@@ -152,3 +152,11 @@ main = do
   replWith (MkData SString _ []) "Command: " processInput
 
 
+test : Maybe (String, DataStore)
+test = do
+  let ds = MkData SString _ []
+  (_, ds1) <- processInput ds "schema Int String Char String" 
+  (_, ds2) <- processInput ds1 "add 1 \"simon\" \"w\" \"parry\""
+  (_, ds3) <- processInput ds2 "get 0"
+  return ("done", ds3)  
+
