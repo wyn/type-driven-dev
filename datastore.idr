@@ -34,6 +34,7 @@ data Command : Schema -> Type where
   SetSchema : (newschema : Schema) -> Command schema
   Add : SchemaType schema -> Command schema
   Get : Integer -> Command schema
+  GetAll : Command schema
   Quit : Command schema
   Help : Command schema
 --  Search : String -> Command schema
@@ -85,7 +86,7 @@ parseInput schema "add" str = do
   rest <- parseBySchema schema str
   return (Add rest)
 parseInput schema "get" val = case all isDigit (unpack val) of
-                            False => Nothing
+                            False => Just GetAll
                             True => Just (Get (cast val))
 parseInput schema "schema" rest = do
   schema_ok <- parseSchema (words rest)
@@ -138,6 +139,7 @@ processInput store inp =
                                      Nothing => Just ("Cannot reset schema\n", store)
                                      Just store' => Just ("OK\n", store')
 --    Just (Search substring) => Just (foldr (++) "" $ intersperse "\n" $ map show (search store substring), store)
+    Just GetAll => Nothing
     Just Quit => Nothing
     Just Help => Just ("Use [add] [get] commands to add/retrieve items in the store.\n" ++
                        "[quit] will quit the session.\n", store)
