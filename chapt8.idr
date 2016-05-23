@@ -25,3 +25,28 @@ exactLength : (len : Nat) -> (input : Vect m a) -> Maybe (Vect len a)
 exactLength {m} len input = case checkEqNat m len of
                                  Nothing => Nothing 
                                  Just (Same m) => Just input
+
+same_cons : {xs : List a} -> {ys : List a} -> 
+            xs = ys -> x :: xs = x :: ys
+same_cons prf = cong prf
+
+same_lists : {xs : List a} -> {ys : List a} -> 
+             x = y -> xs = ys -> x :: xs = y :: ys
+same_lists Refl prfs = same_cons prfs
+
+data ThreeEq : (a : Nat) -> (b : Nat) -> (c : Nat) -> Type where
+  SameThree : (x : Nat) -> ThreeEq x x x
+  
+allSameS : (x, y, z : Nat) -> ThreeEq x y z -> ThreeEq (S x) (S y) (S z)
+allSameS x x x (SameThree x) = SameThree (S x)
+
+
+
+
+
+
+ 
+ 
+ 
+ 
+ 
