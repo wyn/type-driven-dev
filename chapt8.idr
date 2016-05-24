@@ -41,12 +41,20 @@ allSameS : (x, y, z : Nat) -> ThreeEq x y z -> ThreeEq (S x) (S y) (S z)
 allSameS x x x (SameThree x) = SameThree (S x)
 
 
+my_plusCommutes : (n : Nat) -> (m : Nat) -> n + m = m + n
+my_plusCommutes Z Z = Refl
+my_plusCommutes Z (S k) = rewrite my_plusCommutes Z k in Refl
+my_plusCommutes (S k) Z = plusZeroRightNeutral (S k)
+my_plusCommutes (S k) (S j) = ?stuff
 
 
+---------- Proofs ----------
+
+Chapt8.stuff = proof
+  intros
+  rewrite plusSuccRightSucc k j
+  rewrite my_plusCommutes j k
+  rewrite plusSuccRightSucc j k
+  trivial
 
 
- 
- 
- 
- 
- 
