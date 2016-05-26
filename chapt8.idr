@@ -40,21 +40,24 @@ data ThreeEq : (a : Nat) -> (b : Nat) -> (c : Nat) -> Type where
 allSameS : (x, y, z : Nat) -> ThreeEq x y z -> ThreeEq (S x) (S y) (S z)
 allSameS x x x (SameThree x) = SameThree (S x)
 
-
 my_plusCommutes : (n : Nat) -> (m : Nat) -> n + m = m + n
 my_plusCommutes Z Z = Refl
 my_plusCommutes Z (S k) = rewrite my_plusCommutes Z k in Refl
 my_plusCommutes (S k) Z = plusZeroRightNeutral (S k)
-my_plusCommutes (S k) (S j) = ?stuff
+my_plusCommutes (S k) (S j) = let inductive_prf = my_plusCommutes k j in
+                                  rewrite sym $ plusSuccRightSucc k j in 
+                                    rewrite inductive_prf in 
+                                      rewrite plusSuccRightSucc j k in 
+                                        Refl
 
+my_reverse : Vect n a -> Vect n a
+my_reverse xs = reverse' [] xs
+  where reverse' : Vect n a -> Vect m a -> Vect (n+m) a
+        reverse' {n} acc [] = rewrite plusZeroRightNeutral n in acc
+        reverse' {n} {m=(S k)} acc (x :: xs) 
+          = let stuff = (reverse' (x::acc) xs) in
+                rewrite sym $ plusSuccRightSucc n k in stuff
 
----------- Proofs ----------
-
-Chapt8.stuff = proof
-  intros
-  rewrite plusSuccRightSucc k j
-  rewrite my_plusCommutes j k
-  rewrite plusSuccRightSucc j k
-  trivial
-
+twoplustwo_not_five : 2 + 2 = 5 -> Void
+twoplustwo_not_five Refl impossible
 
