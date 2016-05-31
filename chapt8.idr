@@ -1,9 +1,9 @@
 module Chapt8
 
 
-data Vect : Nat -> Type -> Type where
-  Nil : Vect Z a
-  (::) : a -> Vect k a -> Vect (S k) a
+data MyVect : Nat -> Type -> Type where
+  Nil : MyVect Z a
+  (::) : a -> MyVect k a -> MyVect (S k) a
   
   
 data EqNat : (num1 : Nat) -> (num2 : Nat) -> Type where
@@ -21,7 +21,7 @@ checkEqNat (S k) (S j) = case checkEqNat k j of
                               Nothing  => Nothing
                               Just eq  => Just (sameS k j eq)
 
-exactLength : (len : Nat) -> (input : Vect m a) -> Maybe (Vect len a)
+exactLength : (len : Nat) -> (input : MyVect m a) -> Maybe (MyVect len a)
 exactLength {m} len input = case checkEqNat m len of
                                  Nothing => Nothing 
                                  Just (Same m) => Just input
@@ -50,9 +50,9 @@ my_plusCommutes (S k) (S j) = let inductive_prf = my_plusCommutes k j in
                                       rewrite plusSuccRightSucc j k in 
                                         Refl
 
-my_reverse : Vect n a -> Vect n a
+my_reverse : MyVect n a -> MyVect n a
 my_reverse xs = reverse' [] xs
-  where reverse' : Vect n a -> Vect m a -> Vect (n+m) a
+  where reverse' : MyVect n a -> MyVect m a -> MyVect (n+m) a
         reverse' {n} acc [] = rewrite plusZeroRightNeutral n in acc
         reverse' {n} {m=(S k)} acc (x :: xs) 
           = let stuff = (reverse' (x::acc) xs) in
@@ -60,4 +60,24 @@ my_reverse xs = reverse' [] xs
 
 twoplustwo_not_five : 2 + 2 = 5 -> Void
 twoplustwo_not_five Refl impossible
+
+head_unequal : DecEq a => {xs : MyVect n a} -> {ys : MyVect n a} ->
+       (contra : (x = y) -> Void) -> ((x :: xs) = (y :: ys)) -> Void       
+head_unequal contra Refl = contra Refl
+
+
+tail_unequal : DecEq a => {xs : MyVect n a} -> {ys : MyVect n a} ->
+              (contra : (xs = ys) -> Void) -> ((x :: xs) = (y :: ys)) -> Void
+tail_unequal contra Refl = contra Refl
+
+
+-- didn't understand how to get this answer incrementally
+-- ended up looking at Vect impl
+DecEq a => DecEq (MyVect n a) where  
+  decEq [] [] = Yes Refl
+  decEq (x :: xs) (y :: ys) with (decEq x y)
+    decEq (x :: xs) (x :: ys) | Yes Refl with (decEq xs ys)
+      decEq (x :: xs) (x :: xs) | Yes Refl | Yes Refl = Yes Refl
+      decEq (x :: xs) (x :: ys) | Yes Refl | No contra = No (tail_unequal contra)
+    decEq (x :: xs) (y :: ys) | No contra = No (head_unequal contra)
 
