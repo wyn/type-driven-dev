@@ -29,3 +29,48 @@ isElem' value (x :: xs) = case decEq value x of
 maryInVector : Elem "Mary" ["Peter", "Paul", "Mary"]
 maryInVector = There (There Here)
 
+data Last : List a -> a -> Type where
+    LastOne : Last [item] value
+    LastCons : (prf : Last xs value) -> Last (x :: xs) value
+
+not_last_of_nil : Last [] value -> Void
+not_last_of_nil LastOne impossible
+not_last_of_nil (LastCons _) impossible
+
+
+-- not_last_one : (cont : (x = value) -> Void) -> 
+--                Last (x :: []) value -> Void
+-- not_last_one cont LastOne = ?absurd_LastOne
+-- not_last_one _ (LastCons LastOne) impossible
+-- not_last_one _ (LastCons (LastCons _)) impossible
+
+
+not_last_but_one : (contr : Last (y :: xs) value -> Void) -> 
+                   Last (x :: (y :: xs)) value -> Void
+not_last_but_one contr (LastCons prf) = contr prf
+
+
+
+not_last_one : (not_there : Last [] value -> Void) -> 
+               (not_here : (x = value) -> Void) -> 
+               Last [x] value -> Void
+not_last_one not_there not_here LastOne = not_here ?not_last_one_rhs_2
+not_last_one _ _ (LastCons LastOne) impossible
+not_last_one _ _ (LastCons (LastCons _)) impossible
+
+isLast : DecEq a => (xs : List a) -> (value : a) -> Dec (Last xs value)
+isLast [] value = No not_last_of_nil
+isLast (x :: []) value = case decEq x value of
+                         Yes Refl => Yes LastOne
+                         No cont => case isLast [] value of 
+                                    No contr => No (not_last_one contr cont)
+--             No (not_last_one cont)
+isLast (x :: (y :: xs)) value = case isLast (y :: xs) value of 
+                                Yes prf => Yes (LastCons prf) 
+                                No contr => No (not_last_but_one contr)
+
+
+
+-- -- isLast (x :: []) value with (decEq x value)
+-- --   isLast (x :: []) x     | Yes Refl = Yes LastOne
+-- --   isLast (x :: []) value | No contr = No (not_last_one contr)   
