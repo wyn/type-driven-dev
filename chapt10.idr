@@ -84,3 +84,31 @@ halves : List a -> (List a, List a)
 halves xs with (takeN (div (length xs) 2) xs)
   halves xs | Fewer = ([], xs)
   halves (n_xs ++ rest) | (Exact n_xs) = (n_xs, rest)
+
+
+data SnocList : List a -> Type where
+  SnocEmpty : SnocList []
+  Snoc : (rec : SnocList xs) -> SnocList (xs ++ [x])
+  
+snocListHelp : SnocList input -> (xs : List a) -> SnocList (input ++ xs)
+snocListHelp {input = input} snoc [] = rewrite appendNilRightNeutral input in snoc
+snocListHelp {input = input} snoc (x :: xs) = rewrite appendAssociative input [x] xs in snocListHelp (Snoc snoc {x}) xs
+
+snocList : (xs : List a) -> SnocList xs
+snocList xs = snocListHelp SnocEmpty xs
+
+total
+my_reverse_help : (input : List a) -> SnocList input -> List a
+my_reverse_help [] SnocEmpty = []
+my_reverse_help (xs ++ [x]) (Snoc rec) = x :: my_reverse_help xs rec
+
+total
+my_reverse_snoc : List a -> List a
+my_reverse_snoc xs = my_reverse_help xs (snocList xs)
+
+total
+my_reverse_snoc2 : List a -> List a
+my_reverse_snoc2 input with (snocList input)
+  my_reverse_snoc2 [] | SnocEmpty = []
+  my_reverse_snoc2 (xs ++ [x]) | (Snoc rec {x}) = x :: (my_reverse_snoc2 xs | rec)
+
