@@ -110,5 +110,5 @@ total
 my_reverse_snoc2 : List a -> List a
 my_reverse_snoc2 input with (snocList input)
   my_reverse_snoc2 [] | SnocEmpty = []
-  my_reverse_snoc2 (xs ++ [x]) | (Snoc rec {x}) = x :: (my_reverse_snoc2 xs | rec)
+  my_reverse_snoc2 (xs ++ [x]) | (Snoc rec {x}) = x :: my_reverse_snoc2 xs | rec
 
