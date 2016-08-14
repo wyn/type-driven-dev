@@ -49,5 +49,32 @@ square_root_bound (S k) number bound (x :: xs) = let err = abs (number - (x*x)) 
                                                  else square_root_bound k number bound xs
                                                  
 square_root : (number : Double) -> Double                                                 
-square_root number = square_root_bound 100 number 0.0000000001 (square_root_approx number number)
+square_root number = square_root_bound 100 number 0.0000000001 
+                     (square_root_approx number number)
+
+data InfIO : Type where
+  Do : IO a -> (a -> Inf InfIO) -> InfIO
+
+(>>=) : IO a -> ( a -> Inf InfIO) -> InfIO
+(>>=) = Do
+
+data Fuel = Dry | More (Lazy Fuel)
+
+run : Fuel -> InfIO -> IO ()
+run (More fuel) (Do c f) = do res <- c
+                              run fuel (f res)
+run Dry _ = putStrLn "out of fuel"
+
+partial
+forever : Fuel
+forever = More forever
+
+totalREPL : (prompt : String) -> (action : String -> String) -> InfIO
+totalREPL prompt action = Do (do putStrLn prompt
+                                 s <- getLine
+                                 putStrLn (action s)) 
+                             (\ _ => totalREPL prompt action)
+
+
+
 
