@@ -97,14 +97,19 @@ namespace CommandDo
   (>>=) : Command a -> (a -> Command b) -> Command b
   (>>=) = Bind
 
-  data Input = Answer Int | QuitCmd
-  
+  data Input = Answer Int | Cat String | Copy String String | QuitCmd
+
+  split_args : String -> List String
+  split_args args = split (\c => c==' ') (toLower args)
+    
   readInput : (prompt : String) -> Command Input  
   readInput prompt = do PutStr prompt
                         answer <- GetLine
-                        if toLower answer == "quit" 
-                        then Pure QuitCmd
-                        else Pure (Answer (cast answer))
+                        case (split_args answer) of
+                          ("quit" :: _) => Pure QuitCmd
+                          ("cat" :: filename :: _)  => Pure (Cat filename)
+                          ("copy" :: source :: destination :: _) => Pure (Copy source destination)
+                          _ => Pure (Answer (cast answer))
   
 namespace ConsoleDo
   data ConsoleIO : Type -> Type where
@@ -153,7 +158,7 @@ mutual
            Answer answer => if (answer == num1 * num2) 
                             then correct nums state
                             else wrong nums (num1 * num2) state
-           QuitCmd => Quit state
+           _ => Quit state
 
 partial
 main : IO ()
@@ -162,3 +167,21 @@ main = do seed <- time
             <- ConsoleDo.run forever (quiz (arithInputs (fromInteger seed)) (MkQuizState 0 0))
               | Nothing => putStrLn ("Out of fuel")
           putStrLn ("Final score: " ++ show score ++ " out of " ++ show turns)
+
+namespace TotalRepl
+  repl : Stream String -> ConsoleIO ()
+  repl (s :: ss) = do 
+    input <- readInput s
+    case input of 
+      Cat filename => do res <- (ReadFile filename)
+                         PutStr (show res)        
+                         repl ss
+      Copy source destination => do res <- WriteFile source destination
+                                    PutStr (show res)
+                                    repl ss
+      _ => Quit ()
+
+partial 
+repl : IO ()
+repl = do ConsoleDo.run forever (TotalRepl.repl (repeat "\nChoose: cat/copy/quit\n"))
+          putStrLn "Bye"
