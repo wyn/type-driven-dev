@@ -125,29 +125,36 @@ namespace ConsoleDo
                                 run fuel (f res)
   run Dry (Do z f) = pure Nothing
 
+record QuizState where
+  constructor MkQuizState
+  score : Nat
+  turns : Nat
 
 mutual
-  correct : Stream Int -> (score : Nat) -> ConsoleIO Nat
-  correct xs score = do PutStr "Correct\n" 
-                        quiz xs (score+1)
+  correct : Stream Int -> (state : QuizState) -> ConsoleIO QuizState
+  correct xs (MkQuizState score turns) 
+    = do PutStr "Correct\n" 
+         quiz xs (MkQuizState (score + 1) (turns + 1))
   
-  wrong : Stream Int -> Int -> (score : Nat) -> ConsoleIO Nat
-  wrong xs x score = do PutStr ("Wrong, the answer is " ++ show x ++ "\n")
-                        quiz xs score
+  wrong : Stream Int -> Int -> (state : QuizState) -> ConsoleIO QuizState
+  wrong xs x (MkQuizState score turns) 
+    = do PutStr ("Wrong, the answer is " ++ show x ++ "\n")
+         quiz xs (MkQuizState score (turns + 1))
   
-  quiz : Stream Int -> (score : Nat) -> ConsoleIO Nat
-  quiz (num1 :: num2 :: nums) score 
-    = do PutStr ("Score so far: " ++ show score ++ "\n")
+  quiz : Stream Int -> (state : QuizState) -> ConsoleIO QuizState
+  quiz (num1 :: num2 :: nums)  state@(MkQuizState score turns)
+    = do PutStr ("Score so far: " ++ show score ++ " / " ++ show turns ++ "\n")
          input <- readInput (show num1 ++ " * " ++ show num2 ++ "?\n")
          case input of
            Answer answer => if (answer == num1 * num2) 
-                               then correct nums score
-                               else wrong nums (num1 * num2) score
-           QuitCmd => Quit score
+                            then correct nums state
+                            else wrong nums (num1 * num2) state
+           QuitCmd => Quit state
 
 partial
 main : IO ()
 main = do seed <- time
-          Just score <- ConsoleDo.run forever (quiz (arithInputs (fromInteger seed)) 0)
-                     | Nothing => putStrLn ("Out of fuel")
-          putStrLn ("Final score: " ++ show score)
+          Just (MkQuizState score turns) 
+            <- ConsoleDo.run forever (quiz (arithInputs (fromInteger seed)) (MkQuizState 0 0))
+              | Nothing => putStrLn ("Out of fuel")
+          putStrLn ("Final score: " ++ show score ++ " out of " ++ show turns)
