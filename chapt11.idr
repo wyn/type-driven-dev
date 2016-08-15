@@ -108,7 +108,7 @@ namespace CommandDo
                         case (split_args answer) of
                           ("quit" :: _) => Pure QuitCmd
                           ("cat" :: filename :: _)  => Pure (Cat filename)
-                          ("copy" :: source :: destination :: _) => Pure (Copy source destination)
+                          ("copy" :: source :: text) => Pure (Copy source (unwords text))
                           _ => Pure (Answer (cast answer))
   
 namespace ConsoleDo
@@ -168,20 +168,27 @@ main = do seed <- time
               | Nothing => putStrLn ("Out of fuel")
           putStrLn ("Final score: " ++ show score ++ " out of " ++ show turns)
 
+
 namespace TotalRepl
+
+  process_fileio : (Show a) => (res : Either FileError a) -> String 
+  process_fileio (Left err) = "Error: " ++ show err
+  process_fileio (Right text) = "\n" ++ show text
+
   repl : Stream String -> ConsoleIO ()
   repl (s :: ss) = do 
     input <- readInput s
     case input of 
       Cat filename => do res <- (ReadFile filename)
-                         PutStr (show res)        
+                         PutStr (process_fileio res)        
                          repl ss
       Copy source destination => do res <- WriteFile source destination
-                                    PutStr (show res)
+                                    PutStr (process_fileio res)
                                     repl ss
       _ => Quit ()
 
 partial 
 repl : IO ()
-repl = do ConsoleDo.run forever (TotalRepl.repl (repeat "\nChoose: cat/copy/quit\n"))
+repl = do (Just _) <- ConsoleDo.run forever (TotalRepl.repl (repeat "\nChoose: cat/copy/quit\n"))
+              | Nothing => putStrLn ("Out of fuel")
           putStrLn "Bye"
