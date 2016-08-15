@@ -91,6 +91,8 @@ namespace CommandDo
     GetLine : Command String
     Pure : ty -> Command ty
     Bind : Command a -> (a -> Command b) -> Command b
+    ReadFile : String -> Command (Either FileError String)
+    WriteFile : String -> String -> Command (Either FileError ())
     
   (>>=) : Command a -> (a -> Command b) -> Command b
   (>>=) = Bind
@@ -118,7 +120,9 @@ namespace ConsoleDo
   runCommand (Pure val) = pure val
   runCommand (Bind c f) = do res <- runCommand c
                              runCommand (f res)
-                             
+  runCommand (ReadFile filename) = readFile filename
+  runCommand (WriteFile filename text) = writeFile filename text
+  
   run : Fuel -> ConsoleIO a -> IO (Maybe a)
   run _ (Quit y) = do pure (Just y)
   run (More fuel) (Do c f) = do res <- runCommand c
