@@ -49,3 +49,25 @@ treeLabelWithS (Node left val right) = do
 treeLabelS : Tree a -> Tree (Integer, a)
 treeLabelS x = evalState (treeLabelWithS x) [10..]
 
+update : (stateType -> stateType) -> State stateType ()
+update f = do
+  x <- get
+  put $ f x
+  
+increase' : Nat -> State Nat ()
+increase' inc = update (+inc)
+
+countEmpty : Tree a -> State Nat ()
+countEmpty Empty = increase' 1
+countEmpty (Node left _ right) = do
+  countEmpty left
+  countEmpty right
+
+countEmptyNode : Tree a -> State (Nat, Nat) ()
+countEmptyNode Empty = update $ \(x, y) => (x+1, y)
+countEmptyNode (Node left _ right) = do
+  update $ \ (x, y) => (x, y+1)
+  countEmptyNode left
+  countEmptyNode right
+
+
