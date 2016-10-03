@@ -35,16 +35,17 @@ increase : Nat -> State Nat ()
 increase inc = do
   current <- get
   put (current + inc)
-  
-  
+
+
 treeLabelWithS : Tree a -> State (Stream labelType) (Tree (labelType, a))  
 treeLabelWithS Empty = pure Empty
 treeLabelWithS (Node left val right) = do 
   left_labelled <- treeLabelWithS left 
-  (this :: rest) <- get
-  ?pure_Empty
-  -- put rest
-  -- right_labelled <- treeLabelWithS right
-  -- pure (Node left_labelled (this, val) right_labelled)
+  lbls <- get
+  put $ Stream.tail lbls
+  right_labelled <- treeLabelWithS right
+  pure (Node left_labelled (Stream.head lbls, val) right_labelled)
 
+treeLabelS : Tree a -> Tree (Integer, a)
+treeLabelS x = evalState (treeLabelWithS x) [10..]
 
