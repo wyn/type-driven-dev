@@ -1,4 +1,4 @@
-module Stack
+module Main
 
 import Data.Vect
 
@@ -32,17 +32,35 @@ runStack stk (Pure x) = pure (x, stk)
 runStack stk (x >>= f) = do (x', stk') <- runStack stk x
                             runStack stk' (f x')
 
-testAdd : StackCmd Integer 0 0
-testAdd = do Push 10
-             Push 20
-             val1 <- Pop
-             val2 <- Pop
-             Pure (val1 + val2)
+-- testAdd : StackCmd Integer 0 0
+-- testAdd = do Push 10
+--              Push 20
+--              val1 <- Pop
+--              val2 <- Pop
+--              Pure (val1 + val2)
              
-doAdd : StackCmd () (S (S height)) (S height)
-doAdd = do val1 <- Pop
-           val2 <- Pop
-           Push (val1 + val2)                                                                 
+-- doAdd : StackCmd () (S (S height)) (S height)
+-- doAdd = do val1 <- Pop
+--            val2 <- Pop
+--            Push (val1 + val2)                                                      
+           
+doDiscard : StackCmd Integer (S height) height
+doDiscard = Pop
+
+doDuplicate : StackCmd () (S height) (S (S height))
+doDuplicate = do val <- Pop
+                 Push val
+                 Push val
+                
+doNegate : StackCmd () (S height) (S height)
+doNegate = do val1 <- Pop
+              Push (-1 * val1)
+              
+doBinOp : (Integer -> Integer -> Integer) -> 
+          StackCmd () (S (S height)) (S height)
+doBinOp op = do val1 <- Pop
+                val2 <- Pop
+                Push (op val1 val2)
 
 data StackIO : Nat -> Type where
   Do : StackCmd a height1 height2 ->
@@ -67,26 +85,57 @@ run (More fuel) stk (Do c f)
 run Dry stk p = pure ()
 
 
-data StkInput = Number Integer | Add
+data StkInput = Number Integer | Add | Multiply | Subtract | Negate | Discard | Duplicate
 
 
 strToInput : String -> Maybe StkInput
 strToInput "" = Nothing
 strToInput "add" = Just Add
+strToInput "subtract" = Just Subtract
+strToInput "multiply" = Just Multiply
+strToInput "negate" = Just Negate
+strToInput "discard" = Just Discard
+strToInput "duplicate" = Just Duplicate
 strToInput x = if all isDigit $ unpack x
                   then Just $ Number $ cast x
                   else Nothing
 
 mutual 
   
-  tryAdd : StackIO height
-  tryAdd {height = (S (S h))} = do
-    doAdd
+  tryDiscard : StackIO height
+  tryDiscard {height = (S h)} = do
+    x <- doDiscard
+    PutStr ("discarded " ++ show x ++ "\n")
+    stackCalc
+  tryDiscard = do PutStr "Not enough items in stack, need at least one\n"
+                  stackCalc
+
+  tryDuplicate : StackIO height
+  tryDuplicate {height = (S h)} = do
+    doDuplicate
+    result <- Top
+    PutStr ("Duplicated " ++ show result ++ "\n")
+    stackCalc
+  tryDuplicate = do PutStr "Not enough items in stack, need at least one\n"
+                    stackCalc
+                                    
+  tryNegate : StackIO height
+  tryNegate {height = (S h)} = do
+    doNegate
     result <- Top
     PutStr (show result ++ "\n")
     stackCalc
-  tryAdd = do PutStr "Not enough items in stack, need at least two\n"
-              stackCalc
+  tryNegate = do PutStr "Not enough items in stack, need at least one\n"
+                 stackCalc
+    
+  tryBinOp : (Integer -> Integer -> Integer) -> StackIO height
+  tryBinOp {height = (S (S h))} op = do
+    doBinOp op
+    result <- Top
+    PutStr (show result ++ "\n")
+    stackCalc
+  tryBinOp _ = do PutStr "Not enough items in stack, need at least two\n"
+                  stackCalc
               
   stackCalc : StackIO height
   stackCalc = do PutStr "> "
@@ -96,8 +145,12 @@ mutual
                                  stackCalc
                    Just (Number i) => do Push i
                                          stackCalc
-                   Just Add => do tryAdd
-              
+                   Just Add => do tryBinOp (+)
+                   Just Multiply => do tryBinOp (*)
+                   Just Subtract => do tryBinOp (-)
+                   Just Negate => do tryNegate
+                   Just Discard => do tryDiscard
+                   Just Duplicate => do tryDuplicate
 partial                                  
 main : IO ()
 main = run forever [] stackCalc
