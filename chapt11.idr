@@ -1,4 +1,4 @@
-module Chapt11
+module Main
 
 import Data.Primitives.Views
 import System

@@ -1,4 +1,4 @@
-module ArithState 
+module Main
 
 import Data.Primitives.Views
 import System
