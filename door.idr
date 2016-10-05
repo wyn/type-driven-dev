@@ -5,7 +5,7 @@ data DoorState = DoorClosed | DoorOpen
 data DoorCmd : Type -> DoorState -> DoorState -> Type where
   Open : DoorCmd () DoorClosed DoorOpen
   Close : DoorCmd () DoorOpen DoorClosed
-  RingBell : DoorCmd () DoorClosed DoorClosed
+  RingBell : DoorCmd () state state
   
   Pure : ty -> DoorCmd ty state state
   (>>=) : DoorCmd a state1 state2 -> 
@@ -16,7 +16,9 @@ data DoorCmd : Type -> DoorState -> DoorState -> Type where
 doorProg : DoorCmd () DoorClosed DoorClosed           
 doorProg = do RingBell 
               Open
+              RingBell
               Close
+              RingBell
 
 
 
